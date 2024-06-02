@@ -7,19 +7,51 @@ import java.util.concurrent.ThreadLocalRandom
 fun main() {
 //	`2φ to 2λ`()
 	val starter = Bag(
-		ε = 8,
-		λ = 8,
-		φ = 8,
-		ξ = 8,
-		γ = 8,
-		θ = 8,
-		ω = 8,
-		ζ = 8,
+		ε = 2,
+		λ = 1,
+		φ = 1,
+		ξ = 0,
+
+		γ = 1,
+		θ = 0,
+		ω = 0,
+		ζ = 0,
 	)
-	// Created network with 5354447 nodes
 
 	val networkSolver = BagNetworkSolver(starter)
 	networkSolver.buildNetwork()
+
+	val allBags = networkSolver.allBags
+	val target = starter.copy(
+		ε = 0,
+//			λ = 2,
+//			φ = 2,
+		ξ = 2,
+
+//			γ = 2,
+//			θ = 2,
+//			ω = 2,
+//			ζ = 2,
+	)
+	val foundTarget = allBags.keys.find {
+		it == target
+	}
+	println(foundTarget)
+
+	// we can do transformations:
+	//2 ε <-> 2 ξ
+	//2 λ <-> 2 φ
+	//
+	//2 ω <-> 2 ζ
+	//2 γ <-> 2 θ
+
+	val path = networkSolver.findPath(
+		starter, starter.copy(
+			ε = starter.ε - 2,
+			ξ = starter.ξ + 2,
+		)
+	)
+	println(path.joinToString(", "))
 }
 
 
@@ -64,7 +96,7 @@ class BagNetworkSolver(
 	private val starter: Bag,
 ) {
 
-	private val allBags = mutableMapOf<Bag, Set<Bag>>()
+	val allBags = mutableMapOf<Bag, Set<Bag>>()
 
 	fun buildNetwork() {
 		allBags.clear()
@@ -105,7 +137,32 @@ class BagNetworkSolver(
 			bag.copy().apply { `fold ζ & φ to γ & ε`() },
 			bag.copy().apply { `fold ε & ω to λ & γ`() },
 			bag.copy().apply { `fold λ & ω to ξ & θ`() },
-		)
+		).filter { it != bag }.toSet()
+	}
+
+	fun findPath(from: Bag, to: Bag): List<Bag> {
+		return searchPath(listOf(from), to) ?: listOf()
+	}
+
+	private fun searchPath(path: List<Bag>, to: Bag): List<Bag>? {
+		val current = path.last()
+		val options = allBags[current]!!
+
+		for (option in options) {
+			if (path.contains(option)) {
+				return null // going in circles
+			}
+
+			val nextPath = path.toMutableList().apply { add(option) }
+			if (option == to) {
+				return nextPath // found it!
+			}
+
+			val foundPath = searchPath(nextPath, to)
+			if (foundPath != null) return foundPath
+		}
+
+		return null // nothing found here
 	}
 }
 

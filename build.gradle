@@ -1,0 +1,17 @@
+plugins {
+	id "org.jetbrains.kotlin.jvm" version "2.0.0"
+}
+
+repositories {
+	mavenCentral()
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+	kotlinOptions.jvmTarget = "21"
+}
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
